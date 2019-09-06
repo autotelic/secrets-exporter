@@ -18,8 +18,12 @@ the results to a file in `dotenv` format. Currently this package only formats va
 ### Flags
 
 - `filename`: The filename the variables will be written to. (defaults to `.envrc`)
+- `export-type`: The format to export the secrets. (Defaults to `terraform`)
+- `name`: The name of the secrets object (kubernetes only)
 
-### Example
+### Terraform
+
+#### Example
 
 With a JSON input of
 ```json
@@ -40,4 +44,29 @@ Usage with chamber:
 
 ```bash
 $ chamber export <service_name> | go run main.go --filename='.env'
+```
+
+### Kubernetes
+
+#### Example
+
+The exporter also supports generation of Kubernetes secrets objects.
+
+```bash
+$ echo '{"HELLO_SECRET":"world"}"' | go run main.go \
+  --filename="Secret.yaml" \
+  --export-type="kubernetes" \
+  --name="demosecret"
+```
+
+Will create the following Kubernetes secret which may be applied using `kubectl`.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: DemoSecret
+type: Opaque
+data:
+  hello_secret: d29ybGQ=
 ```
