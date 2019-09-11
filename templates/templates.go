@@ -1,3 +1,6 @@
+package templates
+
+const KubernetesSecretTmpl = `
 apiVersion: v1
 kind: Secret
 metadata:
@@ -5,3 +8,4 @@ metadata:
 type: Opaque
 data:{{ range $key, $value := .Secrets }}
   {{ $key }}: {{ $value }}{{ end }}
+`

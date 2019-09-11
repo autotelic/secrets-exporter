@@ -11,6 +11,7 @@ import (
   "os"
   "strings"
   "text/template"
+  "./templates"
 )
 
 type SecretData struct{
@@ -49,7 +50,7 @@ func getTemplate() string {
 }
 
 func getSecrets(input io.Reader) map[string]interface{} {
-	var secrets = make(map[string]interface{})
+  var secrets = make(map[string]interface{})
 
   jsonErr := json.NewDecoder(input).Decode(&secrets)
   if jsonErr != nil {
@@ -72,7 +73,7 @@ func encodeValues(secrets map[string]interface{}) map[string]interface{} {
 }
 
 func kubernetesSecrets(secrets map[string]interface{}, file *os.File, flags map[string]string) {
-  secretTmpl := getTemplate()
+  secretTmpl := templates.KubernetesSecretTmpl;
   name := flags["name"]
 
   tmpl, err := template.New("secret").Parse(secretTmpl)
