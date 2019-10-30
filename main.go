@@ -1,21 +1,21 @@
 package main
 
 import (
+  "./templates"
   "encoding/base64"
   "encoding/json"
   "flag"
   "fmt"
-	"io"
+  "io"
   "io/ioutil"
   "log"
   "os"
   "strings"
   "text/template"
-  "./templates"
 )
 
-type SecretData struct{
-  Name string
+type SecretData struct {
+  Name    string
   Secrets map[string]interface{}
 }
 
@@ -25,7 +25,7 @@ const FILENAME = ".envrc"
 const TERRAFORM = "terraform"
 const KUBERNETES = "kubernetes"
 
-var exportTypes = []string {TERRAFORM, KUBERNETES}
+var exportTypes = []string{TERRAFORM, KUBERNETES}
 
 func check(err error) {
   if err != nil {
@@ -34,19 +34,19 @@ func check(err error) {
 }
 
 func checkStdin() {
-	fi, err := os.Stdin.Stat()
+  fi, err := os.Stdin.Stat()
   if err != nil {
     panic(err)
   }
-  if fi.Mode() & os.ModeNamedPipe == 0 {
-  	os.Exit(0)
+  if fi.Mode()&os.ModeNamedPipe == 0 {
+    os.Exit(0)
   }
 }
 
 func getTemplate() string {
-   data, err := ioutil.ReadFile("./k8Secrets.tmpl")
-   check(err)
-   return string(data)
+  data, err := ioutil.ReadFile("./k8Secrets.tmpl")
+  check(err)
+  return string(data)
 }
 
 func getSecrets(input io.Reader) map[string]interface{} {
@@ -57,7 +57,7 @@ func getSecrets(input io.Reader) map[string]interface{} {
     log.Fatal(jsonErr)
   }
 
-  return secrets;
+  return secrets
 }
 
 func encodeValues(secrets map[string]interface{}) map[string]interface{} {
@@ -69,18 +69,18 @@ func encodeValues(secrets map[string]interface{}) map[string]interface{} {
     encodedSecrets[lowercaseKey] = str
   }
 
-  return encodedSecrets;
+  return encodedSecrets
 }
 
 func kubernetesSecrets(secrets map[string]interface{}, file *os.File, flags map[string]string) {
-  secretTmpl := templates.KubernetesSecretTmpl;
+  secretTmpl := templates.KubernetesSecretTmpl
   name := flags["name"]
 
   tmpl, err := template.New("secret").Parse(secretTmpl)
 
-  encodedSecrets := encodeValues(secrets);
+  encodedSecrets := encodeValues(secrets)
 
-  data := SecretData{name, encodedSecrets};
+  data := SecretData{name, encodedSecrets}
 
   err = tmpl.Execute(file, data)
   check(err)
@@ -98,15 +98,15 @@ func terraformSecrets(secrets map[string]interface{}, file *os.File, flags map[s
 
 func getFormatter(exportType string) Formatter {
   return map[string]Formatter{
-    TERRAFORM: terraformSecrets,
+    TERRAFORM:  terraformSecrets,
     KUBERNETES: kubernetesSecrets,
   }[exportType]
 }
 
 func main() {
-	checkStdin()
+  checkStdin()
 
-	filename := flag.String("filename", FILENAME, "The filename")
+  filename := flag.String("filename", FILENAME, "The filename")
   exportType := flag.String("export-type", TERRAFORM, "The export type")
   name := flag.String("name", "", "The name for the kubernetes secrets config")
 
@@ -116,23 +116,23 @@ func main() {
 
   flags := map[string]string{
     "filename": *filename,
-    "name": *name,
+    "name":     *name,
   }
 
   if len(secrets) == 0 {
-		os.Exit(0)
-	}
+    os.Exit(0)
+  }
 
   file, err := os.Create(*filename)
   if err != nil {
     log.Fatal("Cannot create file", err)
-    return;
+    return
   }
   defer file.Close()
 
   formatter := getFormatter(*exportType)
 
-  if (formatter == nil) {
+  if formatter == nil {
     fmt.Printf("Invalid export-type. Please use one of: %s\n", strings.Join(exportTypes, ", "))
     os.Exit(0)
   }
